@@ -2,6 +2,8 @@
 
 An expressive Markdown editor with flexible HTML capabilities. The Sunset editor can be included in any project that needs an easy to use, capable text editor with Markdown syntax parsing.
 
+![editor_demo](./sunset_editor_demo.gif)
+
 ### Installation
 
 The Sunset Editor is currently only available for Vue.js projects as a Vue component. To get started, install the Sunset editor package with npm.
