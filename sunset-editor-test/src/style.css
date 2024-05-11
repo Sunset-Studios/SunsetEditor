@@ -1,4 +1,4 @@
-@import 'sunset-editor/style.css';
+@import '@sunsetlearn/sunset-editor/style.css';
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;

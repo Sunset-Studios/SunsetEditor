@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { SunsetEditor } from 'sunset-editor'
+import { SunsetEditor } from '@sunsetlearn/sunset-editor'
 
 const theme1_style = ref(`
 :root {
