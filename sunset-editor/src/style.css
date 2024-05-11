@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@font-face {
+  font-family: Lato;
+  src: url('@/assets/fonts/Lato/Lato-Thin.ttf');
+  font-weight: 200;
+}
+
+@font-face {
+  font-family: Lato;
+  src: url('@/assets/fonts/Lato/Lato-Regular.ttf');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: Lato;
+  src: url('@/assets/fonts/Lato/Lato-Bold.ttf');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: Lato;
+  src: url('@/assets/fonts/Lato/Lato-Black.ttf');
+  font-weight: 800;
+}
+
+:root {
+  --vt-c-white: #ffffff;
+  --vt-c-white-soft: #f8f8f8;
+  --vt-c-white-mute: #f2f2f2;
+
+  --vt-c-black: #181818;
+  --vt-c-black-soft: #222222;
+  --vt-c-black-mute: #282828;
+  --vt-c-black-light: #757575;
+  --vt-c-gray-mute: #2b2b2b;
+
+  --vt-c-dark-green: rgb(17, 77, 57);
+  --vt-c-active-green: rgb(32, 158, 116);
+  --vt-c-muted-green: rgb(83, 126, 112);
+
+  --vt-c-active-red: rgb(174, 32, 32);
+  --vt-c-muted-red: rgb(126, 83, 83);
+
+  --vt-c-bright-yellow: rgb(207, 209, 54);
+  --vt-c-subtle-yellow: rgb(114, 116, 22);
+  --vt-c-muted-yellow: rgb(80, 81, 38);
+  --vt-c-dark-yellow: rgb(44, 44, 21);
+
+  --vt-c-indigo: #2c3e50;
+  --vt-c-indigo-dark: #131b22;
+
+  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
+  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
+  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
+  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+
+  --vt-c-text-light-1: var(--vt-c-indigo);
+  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
+  --vt-c-text-dark-1: var(--vt-c-white);
+  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+  --vt-c-text-dark-3: rgb(177, 174, 174);
+
+  --vt-c-sunset-theme-1: #250f1f;
+  --vt-c-sunset-theme-2: #e9be7b;
+  --vt-c-sunset-theme-3: #f8ecba;
+  --vt-c-sunset-theme-4: #b6162c;
+  --vt-c-sunset-theme-5: #e8802d;
+  --vt-c-sunset-theme-6: #6e6264;
+
+  --vt-c-sunset-theme-2-low-opacity: #e9bf7b9c;
+}
+
+:root {
+  --color-background: var(--vt-c-black);
+  --color-background-soft: var(--vt-c-black-soft);
+  --color-background-mute: var(--vt-c-black-mute);
+  --color-background-light: var(--vt-c-black-light);
+
+  --color-border: var(--vt-c-divider-dark-2);
+  --color-border-hover: var(--vt-c-divider-dark-1);
+
+  --color-heading: var(--vt-c-muted-green);
+  --color-text: var(--vt-c-text-dark-2);
+  --color-link: var(--vt-c-active-green);
+
+  --color-note: var(--vt-c-muted-yellow);
+  --color-info: var(--vt-c-text-dark-2);
+
+  --section-gap: 160px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: var(--vt-c-black);
+    --color-background-soft: var(--vt-c-black-soft);
+    --color-background-mute: var(--vt-c-black-mute);
+    --color-background-light: var(--vt-c-black-light);
+
+    --color-border: var(--vt-c-divider-dark-2);
+    --color-border-hover: var(--vt-c-divider-dark-1);
+
+    --color-heading: var(--vt-c-muted-green);
+    --color-text: var(--vt-c-text-dark-2);
+  }
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: Lato, sans-serif;
+}
+
+/* Main Scrollbar */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #262c25;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  /* background: #466047; */
+  background: var(--vt-c-sunset-theme-5)
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+a.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+}
+
+.centered-icon
+{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  pointer-events: none;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
