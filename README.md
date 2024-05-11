@@ -7,7 +7,7 @@ An expressive Markdown editor with flexible HTML capabilities. The Sunset editor
 The Sunset Editor is currently only available for Vue.js projects as a Vue component. To get started, install the Sunset editor package with npm.
 
 ```bash
-npm install --save @sunset/sunset-editor-vue
+npm install --save @sunsetlearn/sunset-editor-vue
 ```
 
 ### Usage
