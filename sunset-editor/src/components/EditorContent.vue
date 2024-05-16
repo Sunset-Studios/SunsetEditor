@@ -507,8 +507,12 @@ async function on_content_key_up(event: KeyboardEvent) {
     }
 }
 
-async function on_content_selection_change(_: Event) {
-    if (skip_selection_change || editor_state.value.showing_component_listing) {
+async function on_content_selection_change(event: Event) {
+    if (!event.target) {
+        return
+    }
+
+    if (!editor_content.value.contains((event.target as Document).activeElement) || skip_selection_change || editor_state.value.showing_component_listing) {
         return
     }
 

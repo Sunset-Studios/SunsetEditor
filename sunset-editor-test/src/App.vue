@@ -115,6 +115,7 @@ onMounted(() => {
 
 <template>
   <div class="top">
+    <h3 class="heading" contenteditable="true">Sunset Studios</h3>
     <SunsetEditor
       ref="sunset_editor"
       asset_endpoint="https://static.sunsetlearn.com"
@@ -125,4 +126,9 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.heading {
+  font-size: 22pt;
+  margin: 10px 0px;
+  color: gray;
+}
 </style>

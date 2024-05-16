@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@sunsetlearn/sunset-editor": "^0.0.2",
+    "@sunsetlearn/sunset-editor": "file:../sunset-editor",
     "vue": "^3.4.21"
   },
   "devDependencies": {
