@@ -38,7 +38,7 @@ defineExpose({ export_document_string, import_document_string })
 
 <template>
     <div class="editor">
-        <EditorContent ref="editor_content"/>
+        <EditorContent ref="editor_content" @contentmodified="$emit('contentmodified')"/>
         <ComponentListingTool v-if="editor_state.showing_component_listing"/>
     </div>
 </template>

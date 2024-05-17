@@ -10,6 +10,8 @@ import { log } from '../utility/logging'
 import { escape_html, unescape_html } from '../utility/html_utils'
 import { v4 as uuidv4 } from 'uuid'
 
+const emit = defineEmits(['contentmodified', 'on_editor_touch_start', 'on_editor_touch_move', 'on_editor_touch_end'])
+
 const { global_dispatcher } = get_global_dispatcher()
 const { editor_state } = get_editor_state()
 
@@ -29,6 +31,7 @@ let compiled_content: Ref<RenderFunction> = ref(() => {})
 
 let skip_selection_change: boolean = false
 let current_stylesheet: CSSStyleSheet | null = null
+
 
 function generate_new_id() {
     return uuidv4().slice(0, 8)
@@ -305,6 +308,8 @@ function add_selected_pallette_content(template: string, insert_offset: number =
         element_raw_texts.set(current_editing_element_id, escaped_html)
 
         component_pallette_insertion_position = current_caret_position + template.length - (insert_offset + 1)
+
+        emit('contentmodified')
     }
 }
 
@@ -479,6 +484,8 @@ async function on_content_key_down(event: KeyboardEvent) {
     }
     
     element_raw_texts.set(current_editing_element_id, escaped_html)
+
+    emit('contentmodified')
 }
 
 async function on_content_key_up(event: KeyboardEvent) {
@@ -598,7 +605,7 @@ defineExpose({ export_document_string, import_document_string })
         <div class="editor-content" ref="editor_content"
             @keydown="on_content_key_down" @keyup="on_content_key_up"
             @touchstart="$emit('on_editor_touch_start', $event)" @touchmove="$emit('on_editor_touch_move', $event)"
-            @touchend="$emit('on_editor_touch_move', $event)" contenteditable="false" spellcheck="false" placeholder="Start typing">
+            @touchend="$emit('on_editor_touch_end', $event)" contenteditable="false" spellcheck="false" placeholder="Start typing">
         </div>
         <div class="editor-content" ref="compiled_editor_content" style="display: none;">
             <component :is="compiled_content"></component>

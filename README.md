@@ -42,7 +42,11 @@ Take a look at the `sunset-editor-test` project to see how most of these propert
 * `start_with_editing_enabled`: Whether the Sunset editor should start in edit mode on startup.
 * `stylesheet_string`: A string with stylesheet overrides for any elements within the Sunset editor.
 
-#### Component methods
+#### Component Events
+
+* `componentmodified`: Fired whenever the content is modified, either through the component palette or regular keystrokes.
+
+#### Component Methods
 
 * `export_document_string()`: Exports all contents of the Sunset editor as a single string, to be saved to a file or processed externally.
 * `import_document_string(doc: string)`: Imports the contents of an exported Markdown document into the Sunset editor and applies all formatting and transformations.
