@@ -21,9 +21,9 @@ function export_document_string() {
     return ''
 }
 
-function import_document_string(doc: string) {
+async function import_document_string(doc: string) {
     if (editor_content.value) {
-        editor_content.value.import_document_string(doc)
+        await editor_content.value.import_document_string(doc)
     }
 }
 
