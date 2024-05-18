@@ -32,7 +32,6 @@ let compiled_content: Ref<RenderFunction> = ref(() => {})
 let skip_selection_change: boolean = false
 let current_stylesheet: CSSStyleSheet | null = null
 
-
 function generate_new_id() {
     return uuidv4().slice(0, 8)
 }
@@ -226,23 +225,26 @@ function export_document_string() {
 async function import_document_string(doc: string) {
     log(`> importing document string`, 'EDITOR_LIFECYCLE')
 
+    for (const child of all_child_elements) {
+        editor_content.value.removeChild(child)
+    }
+
     let parts = doc.split('\n\n\n')
 
     all_element_ids = []
+    all_child_elements = []
     element_raw_texts.clear()
 
-    for (const child of editor_content.value.childNodes) {
-        child.remove()
-    }
-
     // Populate id and raw text data structures
-    for (const part of parts) {
-        const id = generate_new_id()
-        all_element_ids.push(id)
-        element_raw_texts.set(id, part)
+    for (const _part of parts) {
+        all_element_ids.push(generate_new_id())
         editor_content.value.appendChild(document.createElement('div'))
     }
-    
+
+    for (let i = 0; i < parts.length; ++i) {
+        element_raw_texts.set(all_element_ids[i], parts[i])
+    }
+
     // Perform HTML transformation by adding new nodes
     for (let i = 0; i < parts.length; ++i) {
         const part = parts[i]
@@ -252,7 +254,7 @@ async function import_document_string(doc: string) {
         const node = range.createContextualFragment(transformed)
         editor_content.value.children[i].replaceChildren(node)
     }
-
+    
     // Generate additional new element at the back
     {
         const part = '\u200B'
@@ -261,13 +263,13 @@ async function import_document_string(doc: string) {
         element_raw_texts.set(id, part)
         editor_content.value.appendChild(document.createElement('div'))
         const new_el = editor_content.value.children[editor_content.value.children.length - 1]
-
+        
         const range = document.createRange()
         range.selectNodeContents(new_el)
         let transformed = await transform_standalone(part)
         const node = range.createContextualFragment(transformed)
         new_el.replaceChildren(node)
-
+        
         current_editing_element.value = new_el
     }
 
@@ -345,7 +347,7 @@ async function on_editor_content_mutated(mutation_list: MutationRecord[], _: Mut
         // Make sure to set the appropriate element ids on new elements so contents can be fetched correctly
         // Element references change when DOM changes, so we can't reliably store and check those as map values instead.
         for (let i = 0; i < all_child_elements.length; ++i) {
-            let el_id = all_element_ids.length - 1 >= i ? all_element_ids[i] : ''
+            let el_id = i <= all_element_ids.length - 1 ? all_element_ids[i] : ''
    
             const el = all_child_elements[i]
             if (!el.getAttribute('id')) {
@@ -361,6 +363,7 @@ async function on_editor_content_mutated(mutation_list: MutationRecord[], _: Mut
 
         // Clear out removed elements from raw text map
         const new_element_ids = all_child_elements.map((el) => el.getAttribute('id'))
+
         const removed_ids = all_element_ids.filter(id => !new_element_ids.includes(id))
         for (const id of removed_ids) {
             element_raw_texts.set(id, '&ZeroWidthSpace;')
