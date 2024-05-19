@@ -596,6 +596,7 @@ onUpdated(() => {
         let all_link_elements = editor_content.value?.getElementsByTagName('a')
         for (const link_el of all_link_elements) {
             link_el.setAttribute('target', '_blank')
+            link_el.setAttribute('contenteditable', 'false')
         }
     }
 })
@@ -606,7 +607,8 @@ defineExpose({ export_document_string, import_document_string })
 <template>
     <div class="editor-content-container">
         <div class="editor-content" ref="editor_content"
-            @keydown="on_content_key_down" @keyup="on_content_key_up"
+            @keydown="on_content_key_down"
+            @keyup="on_content_key_up"
             @touchstart="$emit('on_editor_touch_start', $event)" @touchmove="$emit('on_editor_touch_move', $event)"
             @touchend="$emit('on_editor_touch_end', $event)" contenteditable="false" spellcheck="false" placeholder="Start typing">
         </div>
@@ -743,7 +745,8 @@ defineExpose({ export_document_string, import_document_string })
 
 .editor-content :deep(a) {
     text-decoration: none;
-    color: var(--color-link)
+    color: var(--color-link);
+    cursor: pointer;
 }
 
 .editor-content :deep(blockquote) {
