@@ -2,13 +2,42 @@
 
 @font-face {
   font-family: Lato;
+  font-weight: 500;
+  font-style: normal;
   src: url('@/assets/fonts/Lato/Lato-Regular.ttf');
 }
 
 @font-face {
   font-family: Lato;
+  font-weight: 500;
   font-style: italic;
   src: url('@/assets/fonts/Lato/Lato-Italic.ttf');
+}
+
+@font-face {
+  font-family: Lato;
+  font-weight: bold;
+  src: url('@/assets/fonts/Lato/Lato-Bold.ttf');
+}
+
+@font-face {
+  font-family: Lato;
+  font-weight: bold;
+  font-style: italic;
+  src: url('@/assets/fonts/Lato/Lato-BoldItalic.ttf');
+}
+
+@font-face {
+  font-family: Lato;
+  font-weight: 900;
+  src: url('@/assets/fonts/Lato/Lato-Black.ttf');
+}
+
+@font-face {
+  font-family: Lato;
+  font-weight: 900;
+  font-style: italic;
+  src: url('@/assets/fonts/Lato/Lato-BlackItalic.ttf');
 }
 
 :root {
