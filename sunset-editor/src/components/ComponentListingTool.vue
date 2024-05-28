@@ -43,7 +43,7 @@ function on_document_key_down(evt: KeyboardEvent) {
     }
 }
 
-function on_document_key_up(_: KeyboardEvent) {
+function on_document_key_up() {
     if (done) {
         global_dispatcher.dispatch('dismiss_palette_selection')
         editor_state.value.showing_component_listing = false
@@ -56,6 +56,26 @@ function select_current_item() {
         global_dispatcher.dispatch('component_pallette_selection', comp_info['raw_template'], comp_info['insert_offset'])
         done = true
     }
+}
+
+function select_clicked_item(event: MouseEvent) {
+    let selected = ''
+    for (const value of filtered.value) {
+        const search_text = (event?.target as HTMLElement)?.innerText ?? ''
+        if (value.toLowerCase().includes(search_text.toLowerCase()) && registered_component_infos.value[value].component) {
+            selected = value
+        }
+    }
+
+    if (!selected) {
+        editor_state.value.showing_component_listing = false
+        done = true
+        return
+    }
+
+    selected_item.value = filtered.value.indexOf(selected)
+
+    select_current_item()
 }
 
 onMounted(() => {
@@ -79,7 +99,7 @@ onUnmounted(() => {
     <div class="components-modal-container" :class="{ active: active }">
         <div class="components-modal">
             <input type="text" class="search" ref="search" @input="on_search"/>
-            <div class="component-option" v-for="(comp, index) in filtered" :class="{ selected: index === selected_item }" @mouseover="highlight_item(index)" @click="select_current_item">
+            <div class="component-option" v-for="(comp, index) in filtered" :class="{ selected: index === selected_item }" @mouseover="highlight_item(index)" @mousedown="select_clicked_item" @mouseup="on_document_key_up">
                 {{ comp }}
             </div>
         </div>
