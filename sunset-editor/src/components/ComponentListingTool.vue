@@ -9,6 +9,7 @@ const { global_dispatcher } = get_global_dispatcher()
 
 let active = ref(false)
 let search = ref()
+let components_modal = ref()
 
 let unfiltered: Ref<string[]> = ref([])
 let filtered: Ref<string[]> = ref([])
@@ -47,6 +48,15 @@ function on_document_key_up() {
     if (done) {
         global_dispatcher.dispatch('dismiss_palette_selection')
         editor_state.value.showing_component_listing = false
+    }
+}
+
+function modal_touch_start(event: TouchEvent) {
+    if (event.touches.length > 0) {
+        if (event.touches[0].target !== components_modal.value && !components_modal.value.contains(event.touches[0].target)) {
+            done = true
+            on_document_key_up()
+        }    
     }
 }
 
@@ -96,10 +106,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="components-modal-container" :class="{ active: active }">
-        <div class="components-modal">
-            <input type="text" class="search" ref="search" @input="on_search"/>
-            <div class="component-option" v-for="(comp, index) in filtered" :class="{ selected: index === selected_item }" @mouseover="highlight_item(index)" @mousedown="select_clicked_item" @mouseup="on_document_key_up">
+    <div class="components-modal-container" :class="{ active: active }" @touchstart="modal_touch_start">
+        <div class="components-modal" ref="components_modal">
+            <input type="text" class="search" ref="search" @input="on_search" />
+            <div class="component-option" v-for="(comp, index) in filtered"
+                :class="{ selected: index === selected_item }" @mouseover="highlight_item(index)"
+                @mousedown="select_clicked_item" @mouseup="on_document_key_up">
                 {{ comp }}
             </div>
         </div>
@@ -117,6 +129,7 @@ onUnmounted(() => {
     transition: 0.15s all;
     opacity: 0.0;
 }
+
 .components-modal-container:before {
     content: "";
     position: absolute;
@@ -127,9 +140,11 @@ onUnmounted(() => {
     background-color: #130031;
     mask-image: radial-gradient(circle, rgba(0, 0, 0, 0.4) 50%, black 100%);
 }
+
 .components-modal-container.active {
     opacity: 1.0;
 }
+
 .components-modal {
     position: relative;
     margin: 0 auto;
@@ -146,6 +161,7 @@ onUnmounted(() => {
     max-height: 75%;
     border-radius: 15px;
 }
+
 .search {
     width: 100%;
     height: 65px;
@@ -159,6 +175,7 @@ onUnmounted(() => {
     filter: drop-shadow(2px 4px 6px #0f051e);
     -webkit-filter: drop-shadow(2px 4px 6px #0f051e);
 }
+
 .component-option {
     width: 100%;
     height: 65px;
@@ -174,9 +191,11 @@ onUnmounted(() => {
     filter: drop-shadow(2px 4px 6px #0f051e);
     -webkit-filter: drop-shadow(2px 4px 6px #0f051e);
 }
+
 .component-option.selected {
     background-color: #271149;
 }
+
 .component-option:hover {
     cursor: pointer;
 }

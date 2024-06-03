@@ -517,6 +517,19 @@ async function on_content_key_up(event: KeyboardEvent) {
     }
 }
 
+let touch_timeout: any = null
+async function on_content_touch_start(event: TouchEvent) {
+    touch_timeout = setTimeout(() => {
+        event.stopImmediatePropagation()
+        editor_state.value.showing_component_listing = !editor_state.value.showing_component_listing
+    }, 750)
+}
+
+async function on_content_touch_end(_: TouchEvent) {
+    clearTimeout(touch_timeout)
+    touch_timeout = null
+}
+
 async function on_content_selection_change(event: Event) {
     if (!event.target) {
         return
@@ -609,8 +622,8 @@ defineExpose({ export_document_string, import_document_string })
         <div class="editor-content" ref="editor_content"
             @keydown="on_content_key_down"
             @keyup="on_content_key_up"
-            @touchstart="$emit('on_editor_touch_start', $event)" @touchmove="$emit('on_editor_touch_move', $event)"
-            @touchend="$emit('on_editor_touch_end', $event)" contenteditable="false" spellcheck="false" placeholder="Start typing">
+            @touchstart="on_content_touch_start" @touchmove="$emit('on_editor_touch_move', $event)"
+            @touchend="on_content_touch_end" contenteditable="false" spellcheck="false" placeholder="Start typing">
         </div>
         <div class="editor-content" ref="compiled_editor_content" style="display: none;">
             <component :is="compiled_content"></component>
