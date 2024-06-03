@@ -658,7 +658,7 @@ defineExpose({ export_document_string, import_document_string })
 }
 
 .editor-content :deep(.active.empty)::after {
-    content: 'Start typing! Use CTRL+SHIFT+L for a components palette. Hold TAB to preview current block render.';
+    content: 'CTRL+SHIFT+L or Hold Touch for Components Palette | Hold TAB to preview content.';
     color: #ffffff52;
 }
 
