@@ -38,7 +38,11 @@ function on_document_key_down(evt: KeyboardEvent) {
     } else if (evt.key === "ArrowUp") {
         selected_item.value = Math.max(0, selected_item.value - 1)
     } else if (evt.key === "Enter") {
-        select_current_item()
+        if (filtered.value.length > 0) {
+            select_current_item()
+        } else if (editor_state.value.llm_connected) {
+            chat_llm()
+        }
     } else if (evt.key === "Escape") {
         done = true
     }
@@ -64,6 +68,14 @@ function select_current_item() {
     const comp_info = registered_component_infos.value[filtered.value[selected_item.value]]
     if (comp_info) {
         global_dispatcher.dispatch('component_pallette_selection', comp_info['raw_template'], comp_info['insert_offset'])
+        done = true
+    }
+}
+
+function chat_llm() {
+    const input = search.value.value
+    if (input) {
+        global_dispatcher.dispatch('request_chat_llm', input)
         done = true
     }
 }
@@ -108,7 +120,7 @@ onUnmounted(() => {
 <template>
     <div class="components-modal-container" :class="{ active: active }" @touchstart="modal_touch_start">
         <div class="components-modal" ref="components_modal">
-            <input type="text" class="search" ref="search" @input="on_search" />
+            <input type="text" class="search" ref="search" placeholder="Ask AI or Search For Components" @input="on_search" />
             <div class="component-option" v-for="(comp, index) in filtered"
                 :class="{ selected: index === selected_item }" @mouseover="highlight_item(index)"
                 @mousedown="select_clicked_item" @mouseup="on_document_key_up">

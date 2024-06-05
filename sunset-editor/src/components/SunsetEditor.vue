@@ -3,11 +3,16 @@ import { ref, onMounted } from 'vue'
 import ComponentListingTool from '../components/ComponentListingTool.vue'
 import EditorContent from '../components/EditorContent.vue'
 import { get_editor_state } from '../core/editor_state'
+import { connect_llms } from '../core/llm_utils'
 
 const props = defineProps({
     asset_endpoint: String,
     start_with_editing_enabled: Boolean,
-    stylesheet_string: String
+    stylesheet_string: String,
+    mistral_key: String,
+    oai_key: String,
+    claude_key: String,
+    current_llm: String
 })
 
 const { editor_state } = get_editor_state()
@@ -31,6 +36,10 @@ onMounted(() => {
     editor_state.value.asset_endpoint = props.asset_endpoint ?? ''
     editor_state.value.is_in_edit_mode = props.start_with_editing_enabled ?? false
     editor_state.value.stylesheet_string = props.stylesheet_string ?? ''
+    editor_state.value.mistral_key = props.mistral_key ?? ''
+    editor_state.value.oai_key = props.oai_key ?? ''
+    editor_state.value.chosen_llm = props.current_llm ?? 'mistral'
+    connect_llms()
 })
 
 defineExpose({ export_document_string, import_document_string })

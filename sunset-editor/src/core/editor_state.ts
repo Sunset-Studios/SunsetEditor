@@ -6,7 +6,13 @@ const editor_state = ref({
     has_mac_support: false,
     showing_component_listing: false,
     asset_endpoint: '',
-    stylesheet_string: ''
+    stylesheet_string: '',
+    chosen_llm: 'openai',
+    llm_connected: false,
+    mistral_key: '',
+    mistral_client: { chatStream: (_: any) => {} },
+    oai_key: '',
+    oai_client: { chat: { completions: { create: (_: any) => {} } } }
 })
 
 export function get_editor_state()

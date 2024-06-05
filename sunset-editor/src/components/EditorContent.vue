@@ -6,6 +6,7 @@ import { ref, onUpdated, onMounted, onUnmounted, watch, Ref, RenderFunction, com
 import { transform_standalone } from '../utility/content_processing_utils'
 import { get_global_dispatcher } from '../core/global_events'
 import { get_editor_state } from '../core/editor_state'
+import { get_llm_response } from '../core/llm_utils'
 import { log } from '../utility/logging'
 import { escape_html, unescape_html } from '../utility/html_utils'
 import { v4 as uuidv4 } from 'uuid'
@@ -27,7 +28,7 @@ let all_child_elements: any[] = []
 let all_element_ids: string[] = []
 let element_raw_texts: Map<string, string> = new Map<string, string>()
 let mutation_observer: MutationObserver = new MutationObserver(on_editor_content_mutated)
-let compiled_content: Ref<RenderFunction> = ref(() => {})
+let compiled_content: Ref<RenderFunction> = ref(() => { })
 
 let skip_selection_change: boolean = false
 let current_stylesheet: CSSStyleSheet | null = null
@@ -164,7 +165,7 @@ function manage_zero_width_space(html: string) {
     let new_html = html
     let removed = false
     if (html.length === 0 || html === '<br>' || html === '\n' || html === '') {
-        new_html = '\u200B' 
+        new_html = '\u200B'
     }
     if (/\u200B/.test(html) && html.replace(/\u200B/, '').length > 0) {
         new_html = html.replace(/\u200B/, '')
@@ -254,7 +255,7 @@ async function import_document_string(doc: string) {
         const node = range.createContextualFragment(transformed)
         editor_content.value.children[i].replaceChildren(node)
     }
-    
+
     // Generate additional new element at the back
     {
         const part = '\u200B'
@@ -263,13 +264,13 @@ async function import_document_string(doc: string) {
         element_raw_texts.set(id, part)
         editor_content.value.appendChild(document.createElement('div'))
         const new_el = editor_content.value.children[editor_content.value.children.length - 1]
-        
+
         const range = document.createRange()
         range.selectNodeContents(new_el)
         let transformed = await transform_standalone(part)
         const node = range.createContextualFragment(transformed)
         new_el.replaceChildren(node)
-        
+
         current_editing_element.value = new_el
     }
 
@@ -284,7 +285,7 @@ async function transform_editor_content(element: any, to_markdown: boolean = fal
     }
 
     const id = element.getAttribute('id')
-    
+
     if (to_markdown) {
         const raw_text = element_raw_texts.get(id)
         element.innerHTML = raw_text
@@ -302,11 +303,11 @@ global_dispatcher.on('component_pallette_selection', add_selected_pallette_conte
 function add_selected_pallette_content(template: string, insert_offset: number = 0) {
     if (editor_content.value) {
         let base_html = current_editing_element.value.innerText.slice(0, current_caret_position)
-            + template 
+            + template
             + current_editing_element.value.innerText.slice(current_caret_position)
 
         base_html = base_html.replace(/\u200B/, '')
-        const escaped_html = escape_html(base_html) 
+        const escaped_html = escape_html(base_html)
         element_raw_texts.set(current_editing_element_id, escaped_html)
 
         component_pallette_insertion_position = current_caret_position + template.length - (insert_offset + 1)
@@ -322,6 +323,17 @@ function on_pallette_dismissed() {
         component_pallette_insertion_position = -1
         on_content_element_focus_changed('', current_editing_element_id)
     }
+}
+
+global_dispatcher.on('request_chat_llm', on_llm_chat_requested)
+async function on_llm_chat_requested(input: string) {
+    let base_html = current_editing_element.value.innerText
+    const true_editing_element_id = current_editing_element_id
+    await get_llm_response(input, (chunk: string) => {
+        base_html += chunk
+        element_raw_texts.set(true_editing_element_id, base_html)
+        on_content_element_focus_changed('', true_editing_element_id)
+    });
 }
 
 async function on_editor_content_mutated(mutation_list: MutationRecord[], _: MutationObserver) {
@@ -343,17 +355,17 @@ async function on_editor_content_mutated(mutation_list: MutationRecord[], _: Mut
     if (mutated) {
         // Update the tracked child elements list once it is mutated
         all_child_elements = Array.from(editor_content.value.children)
-  
+
         // Make sure to set the appropriate element ids on new elements so contents can be fetched correctly
         // Element references change when DOM changes, so we can't reliably store and check those as map values instead.
         for (let i = 0; i < all_child_elements.length; ++i) {
             let el_id = i <= all_element_ids.length - 1 ? all_element_ids[i] : ''
-   
+
             const el = all_child_elements[i]
             if (!el.getAttribute('id')) {
                 el.setAttribute('id', el_id)
             }
-    
+
             if (!element_raw_texts.has(el_id)) {
                 element_raw_texts.set(el_id, '&ZeroWidthSpace;')
             }
@@ -369,7 +381,7 @@ async function on_editor_content_mutated(mutation_list: MutationRecord[], _: Mut
             element_raw_texts.set(id, '&ZeroWidthSpace;')
         }
 
-        all_element_ids = new_element_ids 
+        all_element_ids = new_element_ids
     }
 }
 
@@ -380,14 +392,14 @@ async function on_content_element_focus_changed(old_element_id: string, new_elem
 
     const old_element = document.getElementById(old_element_id)
     const new_element = document.getElementById(new_element_id)
-    
+
     if (old_element) {
         const to_markdown: boolean = false
         await transform_editor_content(old_element, to_markdown)
     }
-    
+
     if (new_element) {
-        current_editing_element_id = new_element_id 
+        current_editing_element_id = new_element_id
         const to_markdown: boolean = true
         await transform_editor_content(new_element, to_markdown)
     }
@@ -422,7 +434,7 @@ async function on_content_key_down(event: KeyboardEvent) {
         current_editing_element.value.innerHTML = '\u200B'
         base_html = '\u200B'
     }
-    
+
     let escaped_html = escape_html(base_html)
 
     if (event.key === 'Enter') {
@@ -432,7 +444,7 @@ async function on_content_key_down(event: KeyboardEvent) {
 
         // We are explicitly handling the enter key, so explicitly handle adding new lines
         const add_trailing_nl: boolean = base_html.charAt(base_html.length - 1) !== '\n'
-        
+
         const caret = get_caret_position(current_editing_element.value)
         base_html = current_editing_element.value.innerText.slice(0, caret)
             + '\n'
@@ -445,12 +457,12 @@ async function on_content_key_down(event: KeyboardEvent) {
         }
 
         // Add a new item after a given number of new lines (maybe make this more configurable?)
-        let new_el: any = null 
+        let new_el: any = null
         if (base_html.includes("\n\n\n\n")) {
             log('> creatingnewelement', 'EDITOR_LIFECYCLE')
 
             const splits = base_html.split("\n\n\n\n")
-            
+
             // Add new element id to id tracking list
             new_el = document.createElement("div")
             let new_el_id = generate_new_id()
@@ -462,7 +474,7 @@ async function on_content_key_down(event: KeyboardEvent) {
                     all_element_ids.push(new_el_id)
                 }
             }
-            
+
             base_html = splits[0] || '&ZeroWidthSpace;'
             // Init for new element
             new_el.innerHTML = splits[1].trim() || '&ZeroWidthSpace;'
@@ -470,22 +482,22 @@ async function on_content_key_down(event: KeyboardEvent) {
             new_caret = new_el.innerHTML.length
 
             element_raw_texts.set(new_el_id, escape_html(new_el.innerHTML))
-            
+
             skip_selection_change = true
         }
-        
+
         escaped_html = escape_html(base_html)
         current_editing_element.value.innerHTML = escaped_html
-        
+
         // Insert the new element and update current element to point to it
         if (new_el) {
             current_editing_element.value.parentNode.insertBefore(new_el, current_editing_element.value.nextSibling)
             current_editing_element.value = new_el
         }
-        
+
         set_caret_position(current_editing_element.value, new_caret)
     }
-    
+
     element_raw_texts.set(current_editing_element_id, escaped_html)
 
     emit('contentmodified')
@@ -619,9 +631,7 @@ defineExpose({ export_document_string, import_document_string })
 
 <template>
     <div class="editor-content-container">
-        <div class="editor-content" ref="editor_content"
-            @keydown="on_content_key_down"
-            @keyup="on_content_key_up"
+        <div class="editor-content" ref="editor_content" @keydown="on_content_key_down" @keyup="on_content_key_up"
             @touchstart="on_content_touch_start" @touchmove="$emit('on_editor_touch_move', $event)"
             @touchend="on_content_touch_end" contenteditable="false" spellcheck="false" placeholder="Start typing">
         </div>

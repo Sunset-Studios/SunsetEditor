@@ -121,6 +121,7 @@ onMounted(() => {
       asset_endpoint="https://static.sunsetlearn.com"
       :start_with_editing_enabled="true"
       :stylesheet_string="theme1_style"
+      current_llm="mistral"
     />
   </div>
 </template>
