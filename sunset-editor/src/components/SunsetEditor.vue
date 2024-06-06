@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import ComponentListingTool from '../components/ComponentListingTool.vue'
 import EditorContent from '../components/EditorContent.vue'
 import { get_editor_state } from '../core/editor_state'
@@ -41,6 +41,10 @@ onMounted(() => {
     editor_state.value.chosen_llm = props.current_llm ?? 'mistral'
     connect_llms()
 })
+
+watch(props, (_) => {
+    connect_llms()
+}, { deep: true })
 
 defineExpose({ export_document_string, import_document_string })
 </script>
