@@ -32,17 +32,22 @@ async function import_document_string(doc: string) {
     }
 }
 
-onMounted(() => {
+function save_prop_values() {
     editor_state.value.asset_endpoint = props.asset_endpoint ?? ''
     editor_state.value.is_in_edit_mode = props.start_with_editing_enabled ?? false
     editor_state.value.stylesheet_string = props.stylesheet_string ?? ''
     editor_state.value.mistral_key = props.mistral_key ?? ''
     editor_state.value.oai_key = props.oai_key ?? ''
     editor_state.value.chosen_llm = props.current_llm ?? 'mistral'
+}
+
+onMounted(() => {
+    save_prop_values()
     connect_llms()
 })
 
 watch(props, (_) => {
+    save_prop_values()
     connect_llms()
 }, { deep: true })
 
