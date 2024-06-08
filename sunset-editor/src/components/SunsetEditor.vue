@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import ComponentListingTool from '../components/ComponentListingTool.vue'
-import EditorContent from '../components/EditorContent.vue'
 import { get_editor_state } from '../core/editor_state'
 import { connect_llms } from '../core/llm_utils'
+
+import ComponentListingTool from '../components/ComponentListingTool.vue'
+import EditorContent from '../components/EditorContent.vue'
+import SearchResultPopup from '../components/SearchResultPopup.vue'
 
 const props = defineProps({
     asset_endpoint: String,
     start_with_editing_enabled: Boolean,
     stylesheet_string: String,
+    current_llm: String,
     mistral_key: String,
     oai_key: String,
-    claude_key: String,
-    current_llm: String
+    show_text_selection_search: Boolean 
 })
 
 const { editor_state } = get_editor_state()
@@ -39,6 +41,7 @@ function save_prop_values() {
     editor_state.value.mistral_key = props.mistral_key ?? ''
     editor_state.value.oai_key = props.oai_key ?? ''
     editor_state.value.chosen_llm = props.current_llm ?? 'mistral'
+    editor_state.value.show_text_selection_search = props.show_text_selection_search
 }
 
 onMounted(() => {
@@ -58,6 +61,7 @@ defineExpose({ export_document_string, import_document_string })
     <div class="editor">
         <EditorContent ref="editor_content" @contentmodified="$emit('contentmodified')"/>
         <ComponentListingTool v-if="editor_state.showing_component_listing"/>
+        <SearchResultPopup v-if="editor_state.resource_search_results.length > 0" />
     </div>
 </template>
 

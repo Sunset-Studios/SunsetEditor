@@ -12,7 +12,9 @@ const editor_state = ref({
     mistral_key: '',
     mistral_client: { chatStream: (_: any) => {} },
     oai_key: '',
-    oai_client: { chat: { completions: { create: (_: any) => {} } } }
+    oai_client: { chat: { completions: { create: (_: any) => {} } } },
+    show_text_selection_search: false,
+    resource_search_results: []
 })
 
 export function get_editor_state()

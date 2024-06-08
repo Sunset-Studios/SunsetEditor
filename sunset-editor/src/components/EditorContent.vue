@@ -9,6 +9,7 @@ import { get_editor_state } from '../core/editor_state'
 import { get_llm_response } from '../core/llm_utils'
 import { log } from '../utility/logging'
 import { escape_html, unescape_html } from '../utility/html_utils'
+import { get_google_results_for_query } from '../utility/search_utils'
 import { v4 as uuidv4 } from 'uuid'
 
 const emit = defineEmits(['contentmodified', 'on_editor_touch_start', 'on_editor_touch_move', 'on_editor_touch_end'])
@@ -35,6 +36,15 @@ let current_stylesheet: CSSStyleSheet | null = null
 
 function generate_new_id() {
     return uuidv4().slice(0, 8)
+}
+
+function get_selected_text() {
+    let text = "";
+    const sel = window.getSelection()
+    if (sel) {
+        text = sel.toString();
+    }
+    return text;
 }
 
 function get_caret_position(div: any) {
@@ -275,6 +285,15 @@ async function import_document_string(doc: string) {
     }
 
     compile_all_content()
+}
+
+async function show_selected_text_result() {
+    if (editor_state.value.show_text_selection_search) {
+        const selection = get_selected_text()
+        if (selection) {
+            editor_state.value.resource_search_results = await get_google_results_for_query(selection)
+        }
+    }
 }
 
 async function transform_editor_content(element: any, to_markdown: boolean = false) {
@@ -529,6 +548,10 @@ async function on_content_key_up(event: KeyboardEvent) {
     }
 }
 
+async function on_content_mouse_up() {
+    await show_selected_text_result()
+}
+
 let touch_timeout: any = null
 async function on_content_touch_start(event: TouchEvent) {
     touch_timeout = setTimeout(() => {
@@ -540,6 +563,8 @@ async function on_content_touch_start(event: TouchEvent) {
 async function on_content_touch_end(_: TouchEvent) {
     clearTimeout(touch_timeout)
     touch_timeout = null
+
+    show_selected_text_result()
 }
 
 async function on_content_selection_change(event: Event) {
@@ -632,8 +657,9 @@ defineExpose({ export_document_string, import_document_string })
 <template>
     <div class="editor-content-container">
         <div class="editor-content" ref="editor_content" @keydown="on_content_key_down" @keyup="on_content_key_up"
-            @touchstart="on_content_touch_start" @touchmove="$emit('on_editor_touch_move', $event)"
-            @touchend="on_content_touch_end" contenteditable="false" spellcheck="false" placeholder="Start typing">
+            @mouseup="on_content_mouse_up" @touchstart="on_content_touch_start"
+            @touchmove="$emit('on_editor_touch_move', $event)" @touchend="on_content_touch_end" contenteditable="false"
+            spellcheck="false" placeholder="Start typing">
         </div>
         <div class="editor-content" ref="compiled_editor_content" style="display: none;">
             <component :is="compiled_content"></component>

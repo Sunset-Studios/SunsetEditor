@@ -1,6 +1,6 @@
 {
   "name": "@sunsetlearn/sunset-editor",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "type": "module",
   "files": [
     "dist"
@@ -31,6 +31,7 @@
     "@types/node": "^20.12.7",
     "@types/uuid": "^9.0.8",
     "@vitejs/plugin-vue": "^5.0.4",
+    "axios": "^1.7.2",
     "cheerio": "^1.0.0-rc.12",
     "highlight.js": "^11.9.0",
     "latex.js": "^0.11.1",
