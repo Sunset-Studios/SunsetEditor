@@ -290,7 +290,7 @@ async function import_document_string(doc: string) {
 async function show_selected_text_result() {
     if (editor_state.value.show_text_selection_search) {
         const selection = get_selected_text()
-        if (selection) {
+        if (selection && selection.split(/\s+/).length <= 12) {
             editor_state.value.resource_search_results = await get_google_results_for_query(selection)
         }
     }
