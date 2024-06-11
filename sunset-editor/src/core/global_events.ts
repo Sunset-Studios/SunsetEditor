@@ -91,7 +91,9 @@ export function get_all_listeners(node: any) {
 export function copy_event_listeners(src: any, dest: any) {
   const events = get_all_listeners(src);
   for (const { event, listener } of events) {
-    add_listener(dest, event, listener);
+    if (event && listener) {
+      add_listener(dest, event, listener);
+    }
   }
 
   const src_children = src.children;

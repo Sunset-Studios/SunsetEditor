@@ -12,7 +12,7 @@ export function wait_for_all_img_loads(element: any, cb: () => {})
 
 export function escape_html(html: string) {
     return html
-        .replace(/&/g, '&amp;')
+        .replace(/&(?:amp;)*/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
@@ -21,9 +21,9 @@ export function escape_html(html: string) {
 
 export function unescape_html(html: string) {
     return html 
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#039;/g, "'")
+        .replace(/&(?:amp;)+/g, '&')
+        .replace(/&(?:lt;)+/g, '<')
+        .replace(/&(?:gt;)+/g, '>')
+        .replace(/&(?:quot;)+/g, '"')
+        .replace(/&(?:#039;)+/g, "'")
 }

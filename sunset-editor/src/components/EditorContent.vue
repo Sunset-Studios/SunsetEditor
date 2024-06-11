@@ -164,7 +164,7 @@ function set_current_element_active_class() {
 
         if (el.getAttribute('id') === current_editing_element_id && current_editing_element_id !== tabbed_preview_element_id) {
             el.classList.add('active')
-            if (el.innerHTML === '\u200B') {
+            if (el.innerHTML === '\u200B' || el.innerHTML === '&ZeroWidthSpace;') {
                 el.classList.add('empty')
             }
         }
@@ -215,11 +215,11 @@ function replace_editable_with_compiled() {
             } else {
                 editor_content.value.children[i].replaceWith(cloned_child)
             }
-
+            
             if (editor_content.value.children[i].getAttribute('id') === current_editing_element_id) {
                 current_el = editor_content.value.children[i]
             }
-
+            
             copy_event_listeners(child, cloned_child);
         }
 
@@ -257,7 +257,7 @@ async function import_document_string(doc: string) {
     }
 
     for (let i = 0; i < parts.length; ++i) {
-        element_raw_texts.set(all_element_ids[i], parts[i])
+        element_raw_texts.set(all_element_ids[i], unescape_html(parts[i]))
     }
 
     // Perform HTML transformation by adding new nodes
@@ -265,8 +265,8 @@ async function import_document_string(doc: string) {
         const part = parts[i]
         const range = document.createRange()
         range.selectNodeContents(editor_content.value.children[i])
-        let transformed = await transform_standalone(unescape_html(part))
-        const node = range.createContextualFragment(transformed)
+        let transformed = await transform_standalone(part)
+        const node = range.createContextualFragment(unescape_html(transformed))
         editor_content.value.children[i].replaceChildren(node)
     }
 
@@ -282,13 +282,13 @@ async function import_document_string(doc: string) {
         const range = document.createRange()
         range.selectNodeContents(new_el)
         let transformed = await transform_standalone(part)
-        const node = range.createContextualFragment(transformed)
+        const node = range.createContextualFragment(unescape_html(transformed))
         new_el.replaceChildren(node)
 
         current_editing_element.value = new_el
     }
 
-    compile_all_content()
+    await compile_all_content()
 }
 
 async function show_selected_text_result() {
@@ -300,26 +300,28 @@ async function show_selected_text_result() {
     }
 }
 
-async function transform_editor_content(element: any, to_markdown: boolean = false) {
-    log(`> transform editor content: to_markdown: ${to_markdown}`, 'EDITOR_LIFECYCLE')
+async function transform_editor_content(to_markdown_element: any) {
+    log(`> transform editor content: to_markdown: ${to_markdown_element}`, 'EDITOR_LIFECYCLE')
 
-    if (!editor_content.value || !element) {
+    if (!editor_content.value) {
         return
     }
 
-    const id = element.getAttribute('id')
-
-    if (to_markdown) {
-        const raw_text = element_raw_texts.get(id)
-        element.innerHTML = raw_text
-    } else {
-        element_raw_texts.set(id, escape_html(element.textContent))
-        let transformed = await transform_standalone(element.textContent)
+    for (const el of all_child_elements) {
+        const id = el.getAttribute('id')
+        const transformed = unescape_html(await transform_standalone(element_raw_texts.get(id)))
         const range = document.createRange()
-        range.selectNodeContents(element)
+        range.selectNodeContents(el)
         const node = range.createContextualFragment(transformed)
-        element.replaceChildren(node)
+        el.replaceChildren(node)
     }
+
+    if (!to_markdown_element) {
+        return
+    }
+
+    const id = to_markdown_element.getAttribute('id')
+    to_markdown_element.innerHTML = escape_html(element_raw_texts.get(id) || "")
 }
 
 global_dispatcher.on('component_pallette_selection', add_selected_pallette_content)
@@ -344,7 +346,7 @@ function on_pallette_dismissed() {
     if (component_pallette_insertion_position >= 0) {
         current_caret_position = component_pallette_insertion_position
         component_pallette_insertion_position = -1
-        on_content_element_focus_changed('', current_editing_element_id)
+        on_content_element_focus_changed(current_editing_element_id)
     }
 }
 
@@ -355,7 +357,7 @@ async function on_llm_chat_requested(input: string) {
     await get_llm_response(input, (chunk: string) => {
         base_html += chunk
         element_raw_texts.set(true_editing_element_id, base_html)
-        on_content_element_focus_changed('', true_editing_element_id)
+        on_content_element_focus_changed(true_editing_element_id)
     });
 }
 
@@ -408,26 +410,18 @@ async function on_editor_content_mutated(mutation_list: MutationRecord[], _: Mut
     }
 }
 
-async function on_content_element_focus_changed(old_element_id: string, new_element_id: string) {
+async function on_content_element_focus_changed(new_element_id: string) {
     log('> current element change', 'EDITOR_LIFECYCLE')
 
     set_current_element_active_class()
 
-    const old_element = document.getElementById(old_element_id)
     const new_element = document.getElementById(new_element_id)
-
-    if (old_element) {
-        const to_markdown: boolean = false
-        await transform_editor_content(old_element, to_markdown)
-    }
-
     if (new_element) {
         current_editing_element_id = new_element_id
-        const to_markdown: boolean = true
-        await transform_editor_content(new_element, to_markdown)
     }
 
-    compile_all_content()
+    await transform_editor_content(new_element)
+    await compile_all_content()
 }
 
 async function on_content_key_down(event: KeyboardEvent) {
@@ -443,7 +437,7 @@ async function on_content_key_down(event: KeyboardEvent) {
         event.preventDefault()
         if (!tabbed_preview_element_id) {
             tabbed_preview_element_id = current_editing_element_id
-            on_content_element_focus_changed(current_editing_element_id, '')
+            on_content_element_focus_changed('')
         }
         return
     }
@@ -458,7 +452,7 @@ async function on_content_key_down(event: KeyboardEvent) {
         base_html = '\u200B'
     }
 
-    let escaped_html = escape_html(base_html)
+    let escaped_html = unescape_html(base_html)
 
     if (event.key === 'Enter') {
         log('> on enter pressed', 'EDITOR_LIFECYCLE')
@@ -504,13 +498,13 @@ async function on_content_key_down(event: KeyboardEvent) {
             // Make sure caret position follows correctly to new item
             new_caret = new_el.innerHTML.length
 
-            element_raw_texts.set(new_el_id, escape_html(new_el.innerHTML))
+            element_raw_texts.set(new_el_id, new_el.innerHTML)
 
             skip_selection_change = true
         }
 
-        escaped_html = escape_html(base_html)
-        current_editing_element.value.innerHTML = escaped_html
+        current_editing_element.value.innerHTML = escape_html(base_html)
+        escaped_html = base_html
 
         // Insert the new element and update current element to point to it
         if (new_el) {
@@ -532,7 +526,7 @@ async function on_content_key_up(event: KeyboardEvent) {
     if (event.key === 'Tab') {
         event.preventDefault()
         if (tabbed_preview_element_id) {
-            on_content_element_focus_changed('', tabbed_preview_element_id)
+            on_content_element_focus_changed(tabbed_preview_element_id)
             tabbed_preview_element_id = ''
         }
         return
@@ -605,7 +599,7 @@ watch(current_editing_element, async (new_editing_element: any, old_editing_elem
     const old_element_id = old_editing_element ? old_editing_element.getAttribute('id') : ''
     if (new_element_id != old_element_id) {
         log(`${new_element_id} <- ${old_element_id}`, 'EDITOR_LIFECYCLE')
-        await on_content_element_focus_changed(old_element_id, new_element_id)
+        await on_content_element_focus_changed(new_element_id)
     }
 })
 
@@ -639,6 +633,7 @@ onUnmounted(() => {
     document.removeEventListener('selectionchange', on_content_selection_change)
 })
 
+let startup_done = false
 onUpdated(() => {
     log('> on updated', 'EDITOR_LIFECYCLE')
 
@@ -652,6 +647,11 @@ onUpdated(() => {
             link_el.setAttribute('target', '_blank')
             link_el.setAttribute('contenteditable', 'false')
         }
+    }
+
+    if (!startup_done) {
+        startup_done = true
+        on_content_element_focus_changed(current_editing_element_id)
     }
 })
 
