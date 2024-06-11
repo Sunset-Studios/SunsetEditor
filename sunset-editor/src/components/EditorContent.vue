@@ -4,7 +4,7 @@ import '@fortawesome/fontawesome-free/css/solid.css'
 import '@/assets/custom_darcula_hljs.css'
 import { ref, onUpdated, onMounted, onUnmounted, watch, Ref, RenderFunction, compile } from 'vue'
 import { transform_standalone } from '../utility/content_processing_utils'
-import { get_global_dispatcher } from '../core/global_events'
+import { get_global_dispatcher, add_listener, copy_event_listeners } from '../core/global_events'
 import { get_editor_state } from '../core/editor_state'
 import { get_llm_response } from '../core/llm_utils'
 import { log } from '../utility/logging'
@@ -133,7 +133,7 @@ function update_all_pre_elements() {
                 if (!pre_el.querySelector('.copy-button')) {
                     const copy_button = document.createElement('div')
                     copy_button.classList.add('copy-button')
-                    copy_button.addEventListener('click', copy_code_snippet)
+                    add_listener(copy_button, 'click', copy_code_snippet)
                     const fa_icon = document.createElement('i')
                     fa_icon.classList.add('fa-solid', 'fa-copy', 'centered-icon')
                     copy_button.appendChild(fa_icon)
@@ -209,14 +209,18 @@ function replace_editable_with_compiled() {
         for (let i = 0; i < compiled_editor_content.value.children.length; ++i) {
             const child = compiled_editor_content.value.children[i]
             const cloned_child = child.cloneNode(true)
+
             if (i >= editor_content.value.children.length) {
                 editor_content.value.appendChild(cloned_child)
             } else {
                 editor_content.value.children[i].replaceWith(cloned_child)
             }
+
             if (editor_content.value.children[i].getAttribute('id') === current_editing_element_id) {
                 current_el = editor_content.value.children[i]
             }
+
+            copy_event_listeners(child, cloned_child);
         }
 
         if (current_el) {
