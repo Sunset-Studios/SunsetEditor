@@ -262,11 +262,10 @@ async function import_document_string(doc: string) {
 
     // Perform HTML transformation by adding new nodes
     for (let i = 0; i < parts.length; ++i) {
-        const part = parts[i]
+        let transformed = await transform_standalone(unescape_html(parts[i]))
         const range = document.createRange()
         range.selectNodeContents(editor_content.value.children[i])
-        let transformed = await transform_standalone(part)
-        const node = range.createContextualFragment(unescape_html(transformed))
+        const node = range.createContextualFragment(transformed)
         editor_content.value.children[i].replaceChildren(node)
     }
 
@@ -279,12 +278,7 @@ async function import_document_string(doc: string) {
         editor_content.value.appendChild(document.createElement('div'))
         const new_el = editor_content.value.children[editor_content.value.children.length - 1]
 
-        const range = document.createRange()
-        range.selectNodeContents(new_el)
-        let transformed = await transform_standalone(part)
-        const node = range.createContextualFragment(unescape_html(transformed))
-        new_el.replaceChildren(node)
-
+        new_el.innerHTML = part
         current_editing_element.value = new_el
     }
 
