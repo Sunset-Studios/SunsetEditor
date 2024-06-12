@@ -186,7 +186,6 @@ function manage_zero_width_space(html: string) {
 
 async function initialize_editor_content() {
     all_element_ids.push(generate_new_id())
-    editor_content.value.innerHTML += '<p></p>'
     editor_content.value.focus()
 }
 
@@ -336,11 +335,11 @@ function add_selected_pallette_content(template: string, insert_offset: number =
 }
 
 global_dispatcher.on('dismiss_palette_selection', on_pallette_dismissed)
-function on_pallette_dismissed() {
+async function on_pallette_dismissed() {
     if (component_pallette_insertion_position >= 0) {
         current_caret_position = component_pallette_insertion_position
         component_pallette_insertion_position = -1
-        on_content_element_focus_changed(current_editing_element_id)
+        await on_content_element_focus_changed(current_editing_element_id)
     }
 }
 
@@ -348,10 +347,10 @@ global_dispatcher.on('request_chat_llm', on_llm_chat_requested)
 async function on_llm_chat_requested(input: string) {
     let base_html = current_editing_element.value.innerText
     const true_editing_element_id = current_editing_element_id
-    await get_llm_response(input, (chunk: string) => {
+    await get_llm_response(input, async (chunk: string) => {
         base_html += chunk
         element_raw_texts.set(true_editing_element_id, base_html)
-        on_content_element_focus_changed(true_editing_element_id)
+        await on_content_element_focus_changed(true_editing_element_id)
     });
 }
 
@@ -406,16 +405,16 @@ async function on_editor_content_mutated(mutation_list: MutationRecord[], _: Mut
 
 async function on_content_element_focus_changed(new_element_id: string) {
     log('> current element change', 'EDITOR_LIFECYCLE')
-
-    set_current_element_active_class()
-
+    
     const new_element = document.getElementById(new_element_id)
     if (new_element) {
         current_editing_element_id = new_element_id
     }
-
+    
     await transform_editor_content(new_element)
     await compile_all_content()
+
+    set_current_element_active_class()
 }
 
 async function on_content_key_down(event: KeyboardEvent) {
@@ -431,7 +430,7 @@ async function on_content_key_down(event: KeyboardEvent) {
         event.preventDefault()
         if (!tabbed_preview_element_id) {
             tabbed_preview_element_id = current_editing_element_id
-            on_content_element_focus_changed('')
+            await on_content_element_focus_changed('')
         }
         return
     }
@@ -520,7 +519,7 @@ async function on_content_key_up(event: KeyboardEvent) {
     if (event.key === 'Tab') {
         event.preventDefault()
         if (tabbed_preview_element_id) {
-            on_content_element_focus_changed(tabbed_preview_element_id)
+            await on_content_element_focus_changed(tabbed_preview_element_id)
             tabbed_preview_element_id = ''
         }
         return
@@ -628,8 +627,13 @@ onUnmounted(() => {
 })
 
 let startup_done = false
-onUpdated(() => {
+onUpdated(async () => {
     log('> on updated', 'EDITOR_LIFECYCLE')
+
+    if (!startup_done) {
+        startup_done = true
+        await on_content_element_focus_changed(current_editing_element_id)
+    }
 
     replace_editable_with_compiled()
 
@@ -641,11 +645,6 @@ onUpdated(() => {
             link_el.setAttribute('target', '_blank')
             link_el.setAttribute('contenteditable', 'false')
         }
-    }
-
-    if (!startup_done) {
-        startup_done = true
-        on_content_element_focus_changed(current_editing_element_id)
     }
 })
 
