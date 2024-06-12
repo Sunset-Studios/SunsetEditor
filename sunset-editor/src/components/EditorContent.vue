@@ -309,7 +309,7 @@ async function transform_editor_content(to_markdown_element: any) {
 
     for (const el of all_child_elements) {
         const id = el.getAttribute('id')
-        const transformed = unescape_html(await transform_standalone(element_raw_texts.get(id)))
+        const transformed = await transform_standalone(unescape_html(element_raw_texts.get(id) || ""))
         const range = document.createRange()
         range.selectNodeContents(el)
         const node = range.createContextualFragment(transformed)
