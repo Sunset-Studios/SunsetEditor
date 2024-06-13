@@ -82,6 +82,10 @@ onUnmounted(() => {
     overflow: hidden;
 }
 
+.background-grid {
+    position: static !important;
+}
+
 .background-grid-line {
     position: absolute;
     background-color: var(--vt-c-indigo);
@@ -92,6 +96,7 @@ onUnmounted(() => {
     width: 100%;
 }
 .background-grid-line.vertical {
+    position: absolute;
     height: 100%;
     width: 1px;
 }
