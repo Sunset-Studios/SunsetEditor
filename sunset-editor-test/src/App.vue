@@ -408,7 +408,7 @@ onMounted(async () => {
     <SunsetEditor
       ref="sunset_editor"
       asset_endpoint="https://static.sunsetlearn.com"
-      :start_with_editing_enabled="true"
+      :start_with_editing_enabled="false"
       :stylesheet_string="theme1_style"
       :show_text_selection_search="true"
       current_llm="mistral"

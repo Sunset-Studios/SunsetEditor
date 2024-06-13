@@ -234,8 +234,8 @@ function export_document_string() {
 async function import_document_string(doc: string) {
     log(`> importing document string`, 'EDITOR_LIFECYCLE')
 
-    for (const child of all_child_elements) {
-        editor_content.value.removeChild(child)
+    while (editor_content.value.firstChild) {
+        editor_content.value.removeChild(editor_content.value.firstChild);
     }
 
     let parts = doc.split('\n\n\n')
