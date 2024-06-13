@@ -834,6 +834,7 @@ defineExpose({ export_document_string, import_document_string })
 .editor-content :deep(.code-line) {
     display: inline-block;
     width: 100%;
+    white-space: pre-wrap;
 }
 
 .hljs {
