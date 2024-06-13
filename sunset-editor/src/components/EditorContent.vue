@@ -200,6 +200,8 @@ async function compile_all_content() {
 }
 
 function replace_editable_with_compiled() {
+    
+
     if (editor_content.value && compiled_editor_content.value.childNodes.length) {
         log(`> replace editable with compiled`, 'EDITOR_LIFECYCLE')
 
@@ -207,18 +209,15 @@ function replace_editable_with_compiled() {
             editor_content.value.removeChild(editor_content.value.firstChild);
         }
 
-        let current_el = null;
         while (compiled_editor_content.value.firstChild) {
             const child = compiled_editor_content.value.firstChild;
             editor_content.value.appendChild(child);
-            if (child.nodeType === 1 && child.getAttribute('id') === current_editing_element_id) {
-                current_el = child;
-            }
         }
+    }
 
-        if (current_el) {
-            set_caret_position(current_el, Math.min(current_caret_position, current_el.textContent.length));
-        }
+    const current_el = document.getElementById(current_editing_element_id)
+    if (current_el) {
+        set_caret_position(current_el, Math.min(current_caret_position, current_el.textContent?.length ?? 0));
     }
 }
 

@@ -8,7 +8,6 @@ import * as cheerio from "cheerio";
 
 hljs.addPlugin({
   "after:highlight": (result) => {
-    // TODO: Add an ignore list for uninteresting tags or lines
     result.value = split_html_at_balanced_line(result.value)
       .map((line) => `<div class="code-line">${line}</div>`)
       .join("\n");
