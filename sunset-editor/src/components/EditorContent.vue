@@ -32,6 +32,7 @@ let mutation_observer: MutationObserver = new MutationObserver(on_editor_content
 let compiled_content: Ref<RenderFunction> = ref(() => { })
 
 let skip_selection_change: boolean = false
+let skip_next_compiled_replace: boolean = false
 let current_stylesheet: CSSStyleSheet | null = null
 
 function generate_new_id() {
@@ -199,10 +200,8 @@ async function compile_all_content() {
 }
 
 function replace_editable_with_compiled() {
-    if (editor_content.value) {
-        if (!compiled_editor_content.value.childNodes.length) {
-            return
-        }
+    if (editor_content.value && compiled_editor_content.value.childNodes.length) {
+        log(`> replace editable with compiled`, 'EDITOR_LIFECYCLE')
 
         while (editor_content.value.firstChild) {
             editor_content.value.removeChild(editor_content.value.firstChild);
@@ -235,7 +234,8 @@ async function import_document_string(doc: string) {
     log(`> importing document string`, 'EDITOR_LIFECYCLE')
 
     while (editor_content.value.firstChild) {
-        editor_content.value.removeChild(editor_content.value.firstChild);
+        const child = editor_content.value.firstChild
+        compiled_editor_content.value.appendChild(child);
     }
 
     let parts = doc.split('\n\n\n')
@@ -307,6 +307,8 @@ async function transform_editor_content(to_markdown_element: any) {
     if (!to_markdown_element) {
         return
     }
+
+    skip_next_compiled_replace = true
 
     const id = to_markdown_element.getAttribute('id')
     to_markdown_element.innerHTML = escape_html(element_raw_texts.get(id) || "")
@@ -630,7 +632,10 @@ onUpdated(async () => {
         await on_content_element_focus_changed(current_editing_element_id)
     }
 
-    replace_editable_with_compiled()
+    if (skip_next_compiled_replace) {
+        skip_next_compiled_replace = false
+        replace_editable_with_compiled()
+    }
 
     update_all_pre_elements()
 

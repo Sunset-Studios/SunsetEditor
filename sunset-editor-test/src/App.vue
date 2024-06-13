@@ -338,12 +338,12 @@ The <inline-snippet snippet="AdjustableVideo"></inline-snippet> component allows
 
 \`\`\`markdown
 
-<adjustable-video src="https://static.sunsetlearn.com/common/beach.mp4" :external="true" :width="75" :middle_align="true></adjustable-video>
+<adjustable-video src="https://static.sunsetlearn.com/common/beach.mp4" :external="true" :width="75" :middle_align="true"></adjustable-video>
 
 \`\`\`
 
 
-<adjustable-video src=" https:/static.sunsetlearn.com/common/beach.mp4"></adjustable-video>
+<adjustable-video src=" https:/static.sunsetlearn.com/common/beach.mp4" :external="true" :width="75" :middle_align="true"></adjustable-video>
 
 
 * <inline-snippet snippet="src"></inline-snippet>: The source path of the video.
@@ -388,17 +388,20 @@ The <inline-snippet snippet="LateX"></inline-snippet> component allows you to wr
 
 \`\`\`markdown
 
-<late-x text="$\overline{v}=(v_{x},v_{y})$" :font_size="16"></late-x>
+<late-x text="$\\overline{v}=(v_{x},v_{y})$" :font_size="16"></late-x>
 
 \`\`\`
 
 
-<late-x text="$\overline{v}=(v_{x},v_{y})$" :font_size="16"></late-x>`
+<late-x text="$\\overline{v}=(v_{x},v_{y})$" :font_size="16"></late-x>`
 
 let sunset_editor = ref()
 
 onMounted(async () => {
   await sunset_editor.value.import_document_string(start_content)
+  setTimeout(async () => {
+    await sunset_editor.value.import_document_string(start_content)
+  }, 1000)
 })
 </script>
 
