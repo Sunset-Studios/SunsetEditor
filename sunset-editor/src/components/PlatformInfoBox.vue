@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onUpdated, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { get_editor_state } from '../core/editor_state' 
 import { wait_for_all_img_loads } from '../utility/html_utils'
+import { add_listener, remove_listener } from '../core/global_events'
 
 const props = defineProps({
     platform: String,
@@ -20,15 +21,22 @@ const { editor_state } = get_editor_state()
 let unsupported = ref(false)
 let is_expanded = ref(false)
 
+let platform_box = ref()
 let header = ref()
 let content = ref()
 
 let header_only_height = ref(0)
 let content_only_height = ref(0)
 
-function togglePlatformInfo()
+function togglePlatformInfo(_: MouseEvent)
 {
     is_expanded.value = !is_expanded.value
+    if (is_expanded.value) {
+        platform_box.value.style.height = `${header.value.offsetHeight + content.value.offsetHeight + 15}px`
+    } else {
+        platform_box.value.style.height = `${header.value.offsetHeight - 15}px`
+    }
+    platform_box.value.style.pointerEvents = unsupported.value ? 'none' : 'auto'
 }
 
 function set_element_heights(): {}
@@ -46,15 +54,8 @@ function set_disabled_state()
     }
 }
 
-set_disabled_state()
-
 watch(editor_state, (_new_editor_state: any, _old_editor_state: any) => {
     set_disabled_state()
-})
-
-onUpdated(() => {
-    set_element_heights() 
-    wait_for_all_img_loads(content.value, set_element_heights)
 })
 
 onMounted(() => {
@@ -66,17 +67,27 @@ onMounted(() => {
     {
         is_expanded.value = window.navigator.platform.startsWith(props.platform?.substring(0, 3) ?? "")
     }
-    set_element_heights() 
+
+    set_disabled_state()
+
+    wait_for_all_img_loads(content.value, set_element_heights)
+
+    if (header.value) {
+        add_listener(header.value, 'click', (event: MouseEvent) => {
+            togglePlatformInfo(event)
+        })
+    }
 })
+
 </script>
 
 <template>
     <div
         class="platform-box"
+        ref="platform_box"
         :class="{ disabled: unsupported }"
-        :style="{ 'height': !is_expanded ? (header_only_height - 15) + 'px' : (header_only_height + content_only_height + 15) + 'px', 'pointer-events': unsupported ? 'none' : 'auto' }"
     >
-        <div class="header" ref="header" @click="togglePlatformInfo">
+        <div class="header" ref="header">
             <h3>{{ props.platform }}</h3> 
             <h4 v-if="unsupported">Coming soon</h4>
             <i class="fa-solid fa-centered" :class="{ 'fa-chevron-down': !is_expanded, 'fa-chevron-up': is_expanded }"></i>

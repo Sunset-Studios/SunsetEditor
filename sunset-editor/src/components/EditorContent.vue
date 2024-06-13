@@ -200,30 +200,25 @@ async function compile_all_content() {
 
 function replace_editable_with_compiled() {
     if (editor_content.value) {
-        for (const child of editor_content.value.childNodes) {
-            child.remove()
+        if (!compiled_editor_content.value.childNodes.length) {
+            return
         }
 
-        let current_el: any = null
-        for (let i = 0; i < compiled_editor_content.value.children.length; ++i) {
-            const child = compiled_editor_content.value.children[i]
-            const cloned_child = child.cloneNode(true)
+        while (editor_content.value.firstChild) {
+            editor_content.value.removeChild(editor_content.value.firstChild);
+        }
 
-            if (i >= editor_content.value.children.length) {
-                editor_content.value.appendChild(cloned_child)
-            } else {
-                editor_content.value.children[i].replaceWith(cloned_child)
+        let current_el = null;
+        while (compiled_editor_content.value.firstChild) {
+            const child = compiled_editor_content.value.firstChild;
+            editor_content.value.appendChild(child);
+            if (child.nodeType === 1 && child.getAttribute('id') === current_editing_element_id) {
+                current_el = child;
             }
-            
-            if (editor_content.value.children[i].getAttribute('id') === current_editing_element_id) {
-                current_el = editor_content.value.children[i]
-            }
-            
-            copy_event_listeners(child, cloned_child);
         }
 
         if (current_el) {
-            set_caret_position(current_el, Math.min(current_caret_position, current_el.innerHTML.length))
+            set_caret_position(current_el, Math.min(current_caret_position, current_el.textContent.length));
         }
     }
 }
@@ -405,12 +400,12 @@ async function on_editor_content_mutated(mutation_list: MutationRecord[], _: Mut
 
 async function on_content_element_focus_changed(new_element_id: string) {
     log('> current element change', 'EDITOR_LIFECYCLE')
-    
+
     const new_element = document.getElementById(new_element_id)
     if (new_element) {
         current_editing_element_id = new_element_id
     }
-    
+
     await transform_editor_content(new_element)
     await compile_all_content()
 

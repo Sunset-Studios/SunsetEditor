@@ -1,12 +1,12 @@
-export function wait_for_all_img_loads(element: any, cb: () => {})
-{
-    if (element)
-    {
+export function wait_for_all_img_loads(element: any, cb: () => {}) {
+    if (element) {
         let all_img_elements = element.getElementsByTagName('img')
-        for (const img_el of all_img_elements)
-        {
+        for (const img_el of all_img_elements) {
             img_el.onload = cb;
         }
+    }
+    else {
+        cb()
     }
 }
 
@@ -20,7 +20,7 @@ export function escape_html(html: string) {
 }
 
 export function unescape_html(html: string) {
-    return html 
+    return html
         .replace(/&(?:amp;)+/g, '&')
         .replace(/&(?:lt;)+/g, '<')
         .replace(/&(?:gt;)+/g, '>')
