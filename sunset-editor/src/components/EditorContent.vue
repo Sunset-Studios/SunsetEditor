@@ -321,7 +321,7 @@ function add_selected_pallette_content(template: string, insert_offset: number =
             + current_editing_element.value.innerText.slice(current_caret_position)
 
         base_html = base_html.replace(/\u200B/, '')
-        const escaped_html = escape_html(base_html)
+        const escaped_html = unescape_html(base_html)
         element_raw_texts.set(current_editing_element_id, escaped_html)
 
         component_pallette_insertion_position = current_caret_position + template.length - (insert_offset + 1)
