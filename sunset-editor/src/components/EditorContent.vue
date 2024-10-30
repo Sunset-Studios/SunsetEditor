@@ -165,7 +165,9 @@ function set_current_element_active_class() {
         el.classList.remove('empty')
 
         if (el.getAttribute('id') === current_editing_element_id && current_editing_element_id !== tabbed_preview_element_id) {
-            el.classList.add('active')
+            if (editor_state.value.is_in_edit_mode) {
+                el.classList.add('active')
+            }
             if (el.innerHTML === '\u200B') {
                 el.classList.add('empty')
             }
