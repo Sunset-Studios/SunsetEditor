@@ -2,9 +2,9 @@
 import '@fortawesome/fontawesome-free/css/fontawesome.css'
 import '@fortawesome/fontawesome-free/css/solid.css'
 import '@/assets/custom_darcula_hljs.css'
-import { ref, onUpdated, onMounted, onUnmounted, watch, Ref, RenderFunction, compile } from 'vue'
+import { ref, onUpdated, onMounted, onUnmounted, watch, Ref, RenderFunction, compile, nextTick } from 'vue'
 import { transform_standalone } from '../utility/content_processing_utils'
-import { get_global_dispatcher, add_listener, copy_event_listeners } from '../core/global_events'
+import { get_global_dispatcher, add_listener } from '../core/global_events'
 import { get_editor_state } from '../core/editor_state'
 import { get_llm_response } from '../core/llm_utils'
 import { log } from '../utility/logging'
@@ -29,7 +29,8 @@ let all_child_elements: any[] = []
 let all_element_ids: string[] = []
 let element_raw_texts: Map<string, string> = new Map<string, string>()
 let mutation_observer: MutationObserver = new MutationObserver(on_editor_content_mutated)
-let compiled_content: Ref<RenderFunction> = ref(() => { })
+let compiled_content: Ref<RenderFunction[]> = ref([() => { }, () => { }])
+let compiled_content_index: number = 0
 
 let skip_selection_change: boolean = false
 let skip_next_compiled_replace: boolean = false
@@ -165,7 +166,7 @@ function set_current_element_active_class() {
 
         if (el.getAttribute('id') === current_editing_element_id && current_editing_element_id !== tabbed_preview_element_id) {
             el.classList.add('active')
-            if (el.innerHTML === '\u200B' || el.innerHTML === '&ZeroWidthSpace;') {
+            if (el.innerHTML === '\u200B') {
                 el.classList.add('empty')
             }
         }
@@ -190,24 +191,21 @@ async function initialize_editor_content() {
     editor_content.value.focus()
 }
 
-async function compile_all_content() {
+function compile_all_content() {
     log(`> compiling all content`, 'EDITOR_LIFECYCLE')
     let compiled = ''
     for (const el of all_child_elements) {
         compiled += el.outerHTML
     }
-    compiled_content.value = compile(compiled, { whitespace: 'preserve' })
+    compiled_content_index = (compiled_content_index + 1) % compiled_content.value.length
+    compiled_content.value[compiled_content_index] = compile(compiled, { whitespace: 'preserve' })
 }
 
 function replace_editable_with_compiled() {
-    
-
     if (editor_content.value && compiled_editor_content.value.childNodes.length) {
         log(`> replace editable with compiled`, 'EDITOR_LIFECYCLE')
 
-        while (editor_content.value.firstChild) {
-            editor_content.value.removeChild(editor_content.value.firstChild);
-        }
+        editor_content.value.replaceChildren();
 
         while (compiled_editor_content.value.firstChild) {
             const child = compiled_editor_content.value.firstChild;
@@ -219,6 +217,49 @@ function replace_editable_with_compiled() {
     if (current_el) {
         set_caret_position(current_el, Math.min(current_caret_position, current_el.textContent?.length ?? 0));
     }
+}
+
+function fixup_editable_elements() {
+    if (!editor_content.value) return
+
+    const seen_ids = new Set<string>()
+    const elements_to_remove: Element[] = []
+
+    for (const child of editor_content.value.children) {
+        const id = child.getAttribute('id')
+        if (id) {
+            if (seen_ids.has(id)) {
+                elements_to_remove.push(child)
+            } else {
+                seen_ids.add(id)
+            }
+        }
+    }
+
+    for (const element of elements_to_remove) {
+        editor_content.value.removeChild(element)
+    }
+}
+
+function on_compiled_content_mounted() {
+    log(`> compiled content mounted`, 'EDITOR_LIFECYCLE')
+
+    if (skip_next_compiled_replace) {
+        skip_next_compiled_replace = false
+        replace_editable_with_compiled()
+    }
+
+    update_all_pre_elements()
+
+    if (editor_content.value) {
+        let all_link_elements = editor_content.value?.getElementsByTagName('a')
+        for (const link_el of all_link_elements) {
+            link_el.setAttribute('target', '_blank')
+            link_el.setAttribute('contenteditable', 'false')
+        }
+    }
+
+    fixup_editable_elements()
 }
 
 function export_document_string() {
@@ -275,7 +316,7 @@ async function import_document_string(doc: string) {
         current_editing_element.value = new_el
     }
 
-    await compile_all_content()
+    compile_all_content()
 }
 
 async function show_selected_text_result() {
@@ -303,11 +344,11 @@ async function transform_editor_content(to_markdown_element: any) {
         el.replaceChildren(node)
     }
 
+    skip_next_compiled_replace = true
+
     if (!to_markdown_element) {
         return
     }
-
-    skip_next_compiled_replace = true
 
     const id = to_markdown_element.getAttribute('id')
     to_markdown_element.innerHTML = escape_html(element_raw_texts.get(id) || "")
@@ -368,7 +409,15 @@ async function on_editor_content_mutated(mutation_list: MutationRecord[], _: Mut
 
     if (mutated) {
         // Update the tracked child elements list once it is mutated
-        all_child_elements = Array.from(editor_content.value.children)
+        const children_set = new Set(editor_content.value.children);
+
+        const seen_ids = new Set();
+        all_child_elements = Array.from(children_set).filter((el: any) => {
+            const id = el.getAttribute('id');
+            if (id && seen_ids.has(id)) return false;
+            seen_ids.add(id);
+            return true;
+        });
 
         // Make sure to set the appropriate element ids on new elements so contents can be fetched correctly
         // Element references change when DOM changes, so we can't reliably store and check those as map values instead.
@@ -381,7 +430,7 @@ async function on_editor_content_mutated(mutation_list: MutationRecord[], _: Mut
             }
 
             if (!element_raw_texts.has(el_id)) {
-                element_raw_texts.set(el_id, '&ZeroWidthSpace;')
+                element_raw_texts.set(el_id, '\u200B')
             }
         }
 
@@ -392,7 +441,7 @@ async function on_editor_content_mutated(mutation_list: MutationRecord[], _: Mut
 
         const removed_ids = all_element_ids.filter(id => !new_element_ids.includes(id))
         for (const id of removed_ids) {
-            element_raw_texts.set(id, '&ZeroWidthSpace;')
+            element_raw_texts.delete(id);
         }
 
         all_element_ids = new_element_ids
@@ -405,10 +454,10 @@ async function on_content_element_focus_changed(new_element_id: string) {
     const new_element = document.getElementById(new_element_id)
     if (new_element) {
         current_editing_element_id = new_element_id
+        await transform_editor_content(new_element)
     }
 
-    await transform_editor_content(new_element)
-    await compile_all_content()
+    compile_all_content()
 
     set_current_element_active_class()
 }
@@ -428,6 +477,10 @@ async function on_content_key_down(event: KeyboardEvent) {
             tabbed_preview_element_id = current_editing_element_id
             await on_content_element_focus_changed('')
         }
+        return
+    }
+
+    if (!current_editing_element.value) {
         return
     }
 
@@ -481,9 +534,9 @@ async function on_content_key_down(event: KeyboardEvent) {
                 }
             }
 
-            base_html = splits[0] || '&ZeroWidthSpace;'
+            base_html = splits[0] || '\u200B'
             // Init for new element
-            new_el.innerHTML = splits[1].trim() || '&ZeroWidthSpace;'
+            new_el.innerHTML = splits[1].trim() || '\u200B'
             // Make sure caret position follows correctly to new item
             new_caret = new_el.innerHTML.length
 
@@ -526,12 +579,14 @@ async function on_content_key_up(event: KeyboardEvent) {
     }
 
     // Remove zero width space if necessary
-    let base_html = current_editing_element.value.innerHTML
-    let { new_html, removed } = manage_zero_width_space(base_html)
-    base_html = new_html
-    if (removed) {
-        current_editing_element.value.innerHTML = base_html
-        set_caret_position(current_editing_element.value, current_editing_element.value.textContent.length)
+    if (current_editing_element.value) {
+        let base_html = current_editing_element.value.innerHTML
+        let { new_html, removed } = manage_zero_width_space(base_html)
+        base_html = new_html
+        if (removed) {
+            current_editing_element.value.innerHTML = base_html
+            set_caret_position(current_editing_element.value, current_editing_element.value.textContent.length)
+        }
     }
 }
 
@@ -630,21 +685,6 @@ onUpdated(async () => {
         startup_done = true
         await on_content_element_focus_changed(current_editing_element_id)
     }
-
-    if (skip_next_compiled_replace) {
-        skip_next_compiled_replace = false
-        replace_editable_with_compiled()
-    }
-
-    update_all_pre_elements()
-
-    if (editor_content.value) {
-        let all_link_elements = editor_content.value?.getElementsByTagName('a')
-        for (const link_el of all_link_elements) {
-            link_el.setAttribute('target', '_blank')
-            link_el.setAttribute('contenteditable', 'false')
-        }
-    }
 })
 
 defineExpose({ export_document_string, import_document_string })
@@ -657,8 +697,11 @@ defineExpose({ export_document_string, import_document_string })
             @touchmove="$emit('on_editor_touch_move', $event)" @touchend="on_content_touch_end" contenteditable="false"
             spellcheck="false" placeholder="Start typing">
         </div>
-        <div class="editor-content" ref="compiled_editor_content" style="display: none;">
-            <component :is="compiled_content"></component>
+        <div class="editor-content" ref="compiled_editor_content" 
+            style="display: none;">
+            <KeepAlive :max="3">
+                <component :is="compiled_content[compiled_content_index]" @vue:mounted="on_compiled_content_mounted"></component>
+            </KeepAlive>
         </div>
         <div class="overlay-items"></div>
     </div>
