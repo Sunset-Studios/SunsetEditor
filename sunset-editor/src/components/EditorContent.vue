@@ -489,7 +489,7 @@ async function on_content_key_down(event: KeyboardEvent) {
     // Special case behavior: prevent deleting the element if it's empty and it's the only element on screen
     if (event.key === 'Backspace'
         && (base_html === '\u200B' || base_html === '<br>' || base_html === '' || base_html === '\n')
-        && all_child_elements.length === 1) {
+        && all_child_elements.length <= 2) {
         current_editing_element.value.innerHTML = '\u200B'
         base_html = '\u200B'
     }

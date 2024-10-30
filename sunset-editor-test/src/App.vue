@@ -395,12 +395,13 @@ The <inline-snippet snippet="LateX"></inline-snippet> component allows you to wr
 
 <late-x text="$\\overline{v}=(v_{x},v_{y})$" :font_size="16"></late-x>`
 
+const empty_content = ''
+
 let sunset_editor = ref()
 
 onMounted(async () => {
-  await sunset_editor.value.import_document_string(start_content)
   setTimeout(async () => {
-    await sunset_editor.value.import_document_string(start_content)
+    await sunset_editor.value.import_document_string(empty_content)
   }, 1000)
 })
 </script>
